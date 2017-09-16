@@ -3,8 +3,8 @@
 # Configuration
 # Replace SSH_USERNAME, SSH_HOST, SSH_GIT_PATH with your details
 USER=smishra1985
-HOST=git@github.com
-GIT_PATH=git@github.com:smishra1985/Repo_15_09.git
+HOST=https://github.com
+GIT_PATH=Repo_15_09.git
 
 REPO=${PWD##*/}
 GIT_REMOTE_URL=ssh://$USER@$HOST/$GIT_PATH/$REPO
