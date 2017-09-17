@@ -8,6 +8,7 @@
 
 # get user name
 username=`git config github.user`
+#username = "smishra1985"
 if [ "$username" = "" ]; then
     echo "Could not find username, run 'git config --global github.user <username>'"
     invalid_credentials=1
