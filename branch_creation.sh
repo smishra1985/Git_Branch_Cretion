@@ -1,46 +1,67 @@
-# creates a remote git repository from the current local directory
+#!/bin/sh
+# 
+# github.sh
+# - create a new repository in Github
+#
+# Copyright (C) 2015 Kenju - All Rights Reserved
+# https://github.com/KENJU/git_shellscript 
 
-# Configuration
-# Replace SSH_USERNAME, SSH_HOST, SSH_GIT_PATH with your details
-USER=smishra1985
-HOST=https://github.com
-GIT_PATH=Repo_15_09.git
+# get user name
+username=`git config github.user`
+if [ "$username" = "" ]; then
+    echo "Could not find username, run 'git config --global github.user <username>'"
+    invalid_credentials=1
+fi
 
-REPO=${PWD##*/}
-GIT_REMOTE_URL=ssh://$USER@$HOST/$GIT_PATH/$REPO
+# get repo name
+dir_name=`basename $(pwd)`
+read -p "Do you want to use '$dir_name' as a repo name?(y/n)" answer_dirname
+case $answer_dirname in
+  y)
+    # use currently dir name as a repo name
+    reponame=$dir_name
+    ;;
+  n)
+    read -p "Enter your new repository name: " reponame
+    if [ "$reponame" = "" ]; then
+        reponame=$dir_name
+    fi
+    ;;
+  *)
+    ;;
+esac
 
-echo "-------------------------------------------"
-echo "------ Building New Git Repository --------"
-echo "-------------------------------------------"
 
-# Setup remote repo
+# create repo
+echo "Creating Github repository '$reponame' ..."
+curl -u $username https://api.github.com/user/repos -d '{"name":"'$reponame'"}'
+echo " done."
 
-echo "--"
-echo "-- Creating bare remote repo at:"
-echo "-- $USER@$HOST/$GIT_PATH/$REPO"
-echo "--"
+# create empty README.md
+echo "Creating README ..."
+touch README.md
+echo " done."
 
-ssh $USER@$HOST 'mkdir '$GIT_PATH'/'$REPO' && cd '$GIT_PATH'/'$REPO' && git --bare init && git --bare update-server-info && cp hooks/post-update.sample hooks/post-update && chmod a+x hooks/post-update && touch git-daemon-export-ok'
-
-# Configure local repo
-
-echo "--"
-echo "-- Initializing local repo & pushing to remote"
-echo "--"
-
-touch .gitignore
+# push to remote repo
+echo "Pushing to remote ..."
 git init
-git add .
-git commit -m 'initial commit'
-git push --all $GIT_REMOTE_URL
-git remote add origin $GIT_REMOTE_URL
-git config branch.master.remote origin
-git config branch.master.merge refs/heads/master
-git fetch
-git merge master
-git branch -a
+git add -A
+git commit -m "first commit"
+git remote rm origin
+git remote add origin https://github.com/$username/$reponame.git
+git push -u origin master
+echo " done."
 
-echo "--"
-echo "-- Your new git repo '$REPO' is ready and initialized at:"
-echo "-- $USER@$HOST/$GIT_PATH/$REPO"
-echo "--"
+# open in a browser
+read -p "Do you want to open the new repo page in browser?(y/n): " answer_browser
+
+case $answer_browser in
+  y)
+    echo "Opening in a browser ..."
+    open https://github.com/$username/$reponame
+    ;;
+  n)
+    ;;
+  *)
+    ;;
+esac
